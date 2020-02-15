@@ -176,6 +176,12 @@ typedef struct
 	int32_t  signal;
 }sg_wifi_t;
 
+typedef struct 
+{
+    int time;// to long int
+    char version[10+1];
+}sg_version_t;
+
 
 #if 0  //jiule struct
 //#define DATA_MAX_LENGTH	(1024+512)
@@ -261,7 +267,7 @@ typedef struct communication_packet_tail_tag
 
 //====================================================================
 //=====================================================================
-//-----时间校准�?
+//-----时间校准�?
 //----send to socket
 typedef struct time_cal_param_packet_send_tag
 {
@@ -295,7 +301,7 @@ typedef struct time_cal_param_packet_recv_tag
 }time_cal_param_packet_recv, *p_time_cal_param_packet_recv;
 
 //-------------------------------------------------------------------------
-//-----报警数据�?
+//-----报警数据�?
 //---send
 typedef struct alarm_param_packet_send_tag
 {
@@ -387,7 +393,7 @@ typedef struct alarm_abnormal_data_tag
 }alarm_abnormal_data, *p_alarm_abnormal_data;
 
 //-------------------------------------------------------------------
-//----normal数据�?
+//----normal数据�?
 typedef struct normal_param_packet_send_tag
 {
     uint8 ccid[20];
@@ -417,7 +423,7 @@ typedef struct watch_collect_data_tag
 
 
 //---------------------------------------------------------------------
-//----回复数据�?报警、睡眠数据回�?
+//----回复数据�?报警、睡眠数据回�?
 typedef struct frame_response_recv_tag
 {
     uint8 ccid[20];
@@ -441,7 +447,7 @@ typedef struct heart_beat_param_packet_send_tag
 
 // gps wifi lac
 
-//隐私�?自定义数�?
+//隐私�?自定义数�?
 typedef struct heart_beat_other_param_packet_send_tag
 {
     uint8 privacy_state;
@@ -465,7 +471,7 @@ typedef struct heart_beat_param_packet_recv_tag
 }heart_beat_param_packet_recv;
 
 //-------------------------------------------------------------------
-//------运动数据�?
+//------运动数据�?
 //------send
 typedef struct motion_param_packet_send_tag
 {
@@ -524,7 +530,7 @@ typedef struct privacy_switch_param_packet_recv_tag
 
 
 //-----------------------------------------------------------------
-//-------实时采集原始数据�?
+//-------实时采集原始数据�?
 //--------send
 typedef struct real_time_data_param_packet_send_tag
 {
@@ -548,7 +554,7 @@ typedef struct real_time_data_param_packet_recv_tag
 
 
 //----------------------------------------------------------------
-//-------请求基准数据�?QUERY_BASEDATA
+//-------请求基准数据�?QUERY_BASEDATA
 typedef struct query_base_data_param_packet_send_tag
 {
     uint8 ccid[20];
@@ -641,7 +647,7 @@ typedef struct
 
 //-----------------------------------------------------------------
 //=================================================================
-//----自定义命令（nordic�?621交互数据�?--------------------------
+//----自定义命令（nordic�?621交互数据�?--------------------------
 
 //send--------------------------
 typedef struct nordic_net_connect_tag

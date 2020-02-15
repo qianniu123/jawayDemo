@@ -819,8 +819,62 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 		break;
 		case DEVICE_SOFTWARE_VERSION_UPLOAD:
 		{
+			//data部分组成: 00 00 00 03(DATA.KEY.LENGTH)4B 45 59(DATA.KEY) 00 00 00 05(DATA.VALUE.LENGTH) 56 41 4C 55 45(DATA.VALUE)
+			// key is str, value is str or json
+			/* 	key 	value
+				time 	"1234567890"
+				version "v0101v0101"
+				imsi	""
+			*/
+			char *key1 = "time";
+			char *key2 = "version";
+			char *key3 = "imsi";
+
 			NORDIC_UART_LOGI("nordic send DEVICE_SOFTWARE_VERSION_UPLOAD: \n");
-			
+			//parse and get value
+			sg_version_t *p_version = (sg_version_t*)p_packet->data;
+			int time = p_version->time;
+			char version[10+1] = {0};
+			memcpy(version, p_version->version, strlen(p_version->version));
+			//repack
+			//------time = 1581749224000
+			int *p_key1_len = (int*)p_packet->data;
+			char *p_key1 = (char*)(p_key1_len+1);
+			memcpy(p_key1, key1, strlen(key1));
+			*p_key1_len = htonl(strlen(key1));
+			pack_data_len += sizeof(int)+strlen(key1);
+
+			int *p_value1_len = (int*)(p_key1 + strlen(key1));
+			char *p_value1 = (char*)(p_value1_len+1);
+			sprintf(p_value1, "%d000", time);
+			*p_value1_len = htonl(strlen(p_value1));
+			pack_data_len += sizeof(int) + strlen(p_value1);
+			//-----version = v0101v0101
+			int *p_key2_len = (int*)(p_value1 + strlen(p_value1));
+			char *p_key2 = (char*)(p_key2_len + 1);
+			memcpy(p_key2, key2, strlen(key2));
+			*p_key2_len = htonl(strlen(key2));
+			pack_data_len += sizeof(int)+strlen(key2);
+
+			int *p_value2_len = (int*)(p_key2+strlen(key2));
+			char *p_value2 = (char*)(p_value2_len+1);
+			memcpy(p_value2, version, strlen(version));
+			*p_value2_len = htonl(strlen(version));
+			pack_data_len += sizeof(int) + strlen(version);
+			//-----imsi = "xxxxxxx" //
+			int *p_key3_len = (int*)(p_value2 + strlen(version));
+			char *p_key3 = (char*)(p_key3_len+1);
+			memcpy(p_key3, key3, strlen(key3));
+			*p_key3_len = htonl(strlen(key3));
+			pack_data_len += sizeof(int) + strlen(key3);
+
+			int *p_value3_len = (int*)(p_key3 + strlen(key3));
+			char *p_value3 = (char*)(p_value3_len+1);
+			memcpy(p_value3, g_nb_local_data.imsi, strlen(g_nb_local_data.imsi));
+			*p_value3_len = htonl(strlen(g_nb_local_data.imsi));
+			pack_data_len += sizeof(int) + strlen(g_nb_local_data.imsi);
+
+			// send
 		}
 		break;
 		case HEART_UPLOAD:
