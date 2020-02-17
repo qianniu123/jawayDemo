@@ -40,6 +40,7 @@
 
 #include "nb_modem_monitor.h"
 #include "cJSON.h"
+#include "time.h"
 
 //============log====================================================================================
 #define NORDIC_UART_LOG_ENABLE 1
@@ -977,6 +978,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 		}
 		break;
 		case LOCATION_UPLOAD:
+		case WEATHER_QUERY:
 		{
 			hal_uart_send_dma(NORDIC_UART, (char*)p_packet, (sizeof(sg_commut_data_t) + p_packet->packet_len + 5));// for test
 			NORDIC_UART_LOGI("nordic send LOCATION_UPLOAD: \n");
@@ -1230,6 +1232,152 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			break;
 			LOCATION_UPLOAD_ERROR:
 			pack_flag = 0;
+		}
+		break;
+		case USER_BASE_INFO_UPLOAD:
+		{
+			NORDIC_UART_LOGI("nordic send USER_BASE_INFO_UPLOAD: \n");
+			/*
+				key			value
+				birthday 	2018-09-28
+				sex			1
+				height		175
+				weight		60
+			*/
+			char *key1 = "birthday";
+			char *key2 = "sex";
+			char *key3 = "height";
+			char *key4 = "weight";
+
+			//parse and get values
+			//sg_user_info_t *user_info = (sg_user_info_t*)p_packet->data;
+			sg_user_info_t user_info = {0};
+			memcpy(&user_info, p_packet->data, sizeof(sg_user_info_t));
+
+			//repack
+			//.......birthday = 2018-09-28
+			int *p_key1_len = (int*)p_packet->data;
+			char *p_key1 = (char*)(p_key1_len+1);
+			memcpy(p_key1, key1, strlen(key1));
+			*p_key1_len = htonl(strlen(key1));
+			pack_data_len += sizeof(int)+strlen(key1);
+
+			int *p_value1_len = (int*)(p_key1+strlen(key1));
+			char *p_value1 = (char*)(p_value1_len+1);
+			memcpy(p_value1, user_info.birthday, strlen(user_info.birthday));
+			*p_value1_len = htonl(strlen(user_info.birthday));
+			pack_data_len += sizeof(int) + strlen(user_info.birthday);
+			//........sex = 1
+			int *p_key2_len = (int*)(p_value1 + strlen(user_info.birthday));
+			char *p_key2 = (char*)(p_key2_len+1);
+			memcpy(p_key2, key2, strlen(key2));
+			*p_key2_len = htonl(strlen(key2));
+			pack_data_len += sizeof(int)+strlen(key2);
+
+			int *p_value2_len = (int*)(p_key2 + strlen(key2));
+			char *p_value2 = (char*)(p_value2_len+1);
+			itoa(user_info.sex, p_value2, 10);//sprintf(p_value2, "%d", user_info.sex);
+			*p_value2_len = htonl(strlen(p_value2));
+			pack_data_len += sizeof(int) + strlen(p_value2);
+			//.......height = 175
+			int *p_key3_len = (int*)(p_value2+strlen(p_value2));
+			char *p_key3 = (char*)(p_key3_len + 1);
+			memcpy(p_key3, key3, strlen(key3));
+			*p_key3_len = htonl(strlen(key3));
+			pack_data_len += sizeof(int) + strlen(key3);
+
+			int *p_value3_len = (int*)(p_key3+strlen(key3));
+			char *p_value3 = (char*)(p_value3_len+1);
+			itoa(user_info.height, p_value3, 10);
+			*p_value3_len = htonl(strlen(p_value3));
+			pack_data_len += sizeof(int) + strlen(p_value3);
+			//.......weight = 60
+			int *p_key4_len = (int*)(p_value3+strlen(p_value3));
+			char *p_key4 = (char*)(p_key4_len+1);
+			memcpy(p_key4, key4, strlen(key4));
+			*p_key4_len = htonl(strlen(key4));
+			pack_data_len += sizeof(int) + strlen(key4);
+
+			int *p_value4_len = (int*)(p_key4+strlen(key4));
+			char *p_value4 = (char*)(p_value4_len+1);
+			itoa(user_info.weight, p_value4, 10);
+			*p_value4_len = htonl(strlen(p_value4));
+			pack_data_len += sizeof(int) + strlen(p_value4);
+
+			//send
+		}
+		break;
+		case HEALTH_UPLOAD:
+		{
+			NORDIC_UART_LOGI("nordic send HEALTH_UPLOAD: \n");
+
+		}
+		break;
+		case SLEEP_UPLOAD:
+		{
+			NORDIC_UART_LOGI("nordic send SLEEP_UPLOAD: \n");
+			// data = json
+			//sprintf(json, "[{\"total\":%d000-%d000,...}]",time1， time2 );
+			char *key = "data";
+
+			//parse and get value
+			sg_sleep_t sleep_data = {0};
+			memcpy(&sleep_data, p_packet->data, sizeof(sg_sleep_t));
+			
+			//repack
+			int *p_key_len = (int*)p_packet->data;
+			char *p_key = (char*)(p_key_len+1);
+			memcpy(p_key, key, strlen(key));
+			*p_key_len = htonl(strlen(key));
+			pack_data_len += sizeof(int)+strlen(key);
+
+			int *p_value_len = (int*)(p_key+strlen(key));
+			char *p_value = (char*)(p_value_len+1);
+			sprintf(p_value, "[{\"total\":\"%d000-%d000\",\"deep\":%d,\"wake\":%d,\"light\":%d}]", sleep_data.time_begin,\
+            sleep_data.time_end, sleep_data.time_deep, sleep_data.time_wake, sleep_data.time_light);
+			*p_value_len = htonl(strlen(p_value));
+			pack_data_len += sizeof(int)+strlen(p_value);
+
+			//send
+		}
+		break;
+		case LUNAR_QUERY:
+		{
+			NORDIC_UART_LOGI("nordic send LUNAR_QUERY: \n");
+			// key 	  value
+			// date = 2017-02-15	
+			char *key = "date";
+
+			//parse and get value
+			int unix_time = *(int*)p_packet->data;
+			long int tmp = unix_time;
+			struct tm time = *localtime((time_t*)&tmp);
+
+			//repack
+			int *p_key_len = (int*)p_packet->data;
+			char *p_key = (char*)(p_key_len+1);
+			memcpy(p_key, key, strlen(key));
+			*p_key_len = htonl(strlen(key));
+			pack_data_len += sizeof(int)+strlen(key);
+
+			int *p_value_len = (int*)(p_key+strlen(key));
+			char *p_value = (char*)(p_value_len+1);
+			sprintf(p_value, "%d-%02d-%02d", time.tm_year+1900, time.tm_mon, time.tm_yday);
+			*p_value_len = htonl(strlen(p_value));
+			pack_data_len += sizeof(int) + strlen(p_value);
+			
+			//send
+		}
+		break;
+		case DEVICE_OPERATION:
+		{
+
+		}
+		break;
+		case DEVICE_COERCE_UNBIND:
+		{
+			NORDIC_UART_LOGI("nordic send DEVICE_COERCE_UNBIND: \n");
+			
 		}
 		break;
 		default:

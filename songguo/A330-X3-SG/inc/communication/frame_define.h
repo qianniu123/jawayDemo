@@ -182,6 +182,22 @@ typedef struct
     char version[10+1];
 }sg_version_t;
 
+typedef struct
+{
+    char birthday[10+1];//
+    uint8_t sex;
+    uint8_t height;
+    uint8_t weight;
+}sg_user_info_t;
+
+typedef struct
+{
+    int time_begin;
+    int time_end;
+    int time_deep;
+    int time_wake;
+    int time_light;
+}sg_sleep_t;
 
 #if 0  //jiule struct
 //#define DATA_MAX_LENGTH	(1024+512)
