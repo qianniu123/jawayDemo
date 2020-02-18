@@ -199,6 +199,31 @@ typedef struct
     int time_light;
 }sg_sleep_t;
 
+typedef struct
+{
+    char date[10+1];
+    char week[9+1];
+    char lunar[18+1];
+    char ganzhi[50+1];//?
+    char zodiac[6+1];
+    char fitavoid[50+1];//?
+    int time;
+}sg_lunar_t;
+
+#define WEATHER_CNT 3
+typedef struct 
+{
+    char date[10+1];
+    char weather[20+1];//?
+    char temperature[30+1];//?
+    char wind[20+1];//?
+    char dress[20+1];//?
+    char cur_temp[20+1];//?
+    char airQuality[20+1];//
+    char city[20+1];//?
+}sg_weather_t;
+
+
 #if 0  //jiule struct
 //#define DATA_MAX_LENGTH	(1024+512)
 //define in c file

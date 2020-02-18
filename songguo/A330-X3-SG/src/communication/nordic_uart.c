@@ -1371,13 +1371,13 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 		break;
 		case DEVICE_OPERATION:
 		{
-
+			NORDIC_UART_LOGI("nordic send DEVICE_OPERATION: \n");
 		}
 		break;
 		case DEVICE_COERCE_UNBIND:
 		{
 			NORDIC_UART_LOGI("nordic send DEVICE_COERCE_UNBIND: \n");
-			
+
 		}
 		break;
 		default:
@@ -1415,7 +1415,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 }
 
 //nb socket recv message and send to nordic
-void socket_recv_msg_process(void *msg      , int len)
+void socket_recv_msg_process(void *msg, int len)
 {
     char recv_flag = 0;
     sg_commut_data_t *p_recv_packet = (sg_commut_data_t*)msg;
@@ -1548,9 +1548,194 @@ void socket_recv_msg_process(void *msg      , int len)
 			case HEART_UPLOAD:
 			{
 				NORDIC_UART_LOGI("%s---------HEART_UPLOAD", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+			}
+			break;
+			case USER_BASE_INFO_UPLOAD:
+			{
+				NORDIC_UART_LOGI("%s---------USER_BASE_INFO_UPLOAD", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+			}
+			break;
+			case SLEEP_UPLOAD:
+			{
+				NORDIC_UART_LOGI("%s---------SLEEP_UPLOAD", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+			}
+			break;
+			case WEATHER_QUERY:
+			{
+				NORDIC_UART_LOGI("%s---------WEATHER_QUERY", __FUNCTION__);
+				p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+				//data = json
+
+				//parse and get value
+				int *p_key_len = (int*)p_recv_packet->data;
+				char *p_key = (char*)(p_key_len + 1);
+				NORDIC_UART_LOGI("key_len=%d, key=%s\n", ntohl(*p_key_len), p_key);
+
+				int *p_value_len = (int*)(p_key+ntohl(*p_key_len);
+				char *p_value = (char*)(p_value_len + 1);
+				NORDIC_UART_LOGI("value_len=%d, value=%s\n", ntohl(*p_value_len), p_value);
+
+				sg_weather_t weather[3] = {0};
+				cJSON *array_json = cJSON_parse(p_value);
+				if(array_json == NULL)
+				{
+					NORDIC_UART_LOGE("array_json parse error");
+					return;
+				}
+				int array_size = cJSON_GetArraySize(array_json);
+				for(int i=0; i<array_size; i++)
+				{
+					cJSON *weather_json = cJSON_GetArrayItem(array_json, i);
+					if(weather_json)
+					{
+						cJSON *item_date = cJSON_GetObjectItem(weather_json, "date");
+						if(item_date && item_date->type == cJSON_String)
+						{
+							//memcpy(weather[i].date, item_date->valuestring, strlen(item_date->valuestring));
+							strcpy(weather[i].date, item_date->valuestring);
+							NORDIC_UART_LOGE("date = %s\n", weather[i].date);
+						}
+						cJSON *item_weather = cJSON_GetObjectItem(weather_json, "weather");
+						if(item_weather && item_weather->type == cJSON_String)
+						{
+							strcpy(weather[i].weather, item_weather->valuestring);
+							NORDIC_UART_LOGE("weather = %s\n", weather[i].weather);
+						}
+						cJSON *item_temp = cJSON_GetObjectItem(weather_json, "temperature");
+						if(item_temp && item_temp->type == cJSON_String)
+						{
+							strcpy(weather[i].temperature, item_temp->valuestring);
+							NORDIC_UART_LOGE("temperature = %s\n", weather[i].temperature);
+						}
+						cJSON *item_wind = cJSON_GetObjectItem(weather_json, "wind");
+						if(item_wind && item_wind->type == cJSON_String)
+						{
+							strcpy(weather[i].wind, item_wind->valuestring);
+							NORDIC_UART_LOGE("wind = %s\n", weather[i].wind);
+						}
+						cJSON *item_dress = cJSON_GetObjectItem(weather_json, "dress");
+						if(item_dress && item_dress->type == cJSON_String)
+						{
+							strcpy(weather[i].dress, item_dress->valuestring);
+							NORDIC_UART_LOGE("dress = %s\n", weather[i].dress);
+						}
+						cJSON *item_curtemp = cJSON_GetObjectItem(weather_json, "curtemperature");
+						if(item_curtemp && item_curtemp->type == cJSON_String)
+						{
+							strcpy(weather[i].cur_temp, item_curtemp->valuestring);
+							NORDIC_UART_LOGE("cur_temp = %s\n", weather[i].cur_temp);
+						}
+						cJSON *item_air = cJSON_GetObjectItem(weather_json, "airQuality");
+						if(item_air && item_air->type == cJSON_String)
+						{
+							strcpy(weather[i].airQuality, item_air->valuestring);
+							NORDIC_UART_LOGE("airQuality = %s\n", weather[i].airQuality);
+						}
+						cJSON *item_city = cJSON_GetObjectItem(weather_json, "city");
+						if(item_city && item_city->type == cJSON_String)
+						{
+							strcpy(weather[i].city, item_city->valuestring);
+							NORDIC_UART_LOGE("city = %s\n", weather[i].city);
+						}
+					}
+				}
+				cJSON_delete(array_json);
+
+				//repack and send to nordic
 				
 			}
 			break;
+			case LUNAR_QUERY:
+			{
+				NORDIC_UART_LOGI("%s---------LUNAR_QUERY", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+				//data = json
+
+				//parse and get value
+				int *p_key_len = (int*)p_recv_packet->data;
+				char *p_key = (char*)(p_key_len+1);
+				NORDIC_UART_LOGI("key_len=%d, key=%s\n", ntohl(*p_key_len), p_key);
+
+				int *p_value_len = (int*)(p_key+ntohl(*p_key_len));
+				char *p_value = (char*)(p_value_len+1);
+				NORDIC_UART_LOGI("value_len=%d, value=%s\n", ntohl(*p_value_len), p_value);
+
+				sg_lunar_t lunar = {0};
+				cJSON *lunar_json = cJSON_parse(p_value);
+				if(lunar_json == NULL)
+				{
+					NORDIC_UART_LOGE("lunar_json parse error");
+					return;
+				}
+				cJSON *item_date = cJSON_GetObjectItem(lunar_json, "date");
+				if(item_date && item_date->type == cJSON_String)
+				{
+					//memcpy(lunar.date, item_date->valueString, strlen(item_date->valueString));
+					strcpy(lunar.date, item_date->valuestring);
+					NORDIC_UART_LOGI("date =%s", lunar.date);
+				}
+				cJSON *item_week = cJSON_GetObjectItem(lunar_json, "week");
+				if(item_week && item_week->type == cJSON_String)
+				{
+					strcpy(lunar.week, item_week->valuestring);
+					NORDIC_UART_LOGI("week =%s", lunar.week);
+				}
+				cJSON *item_lunar = cJSON_GetObjectItem(lunar_json, "lunar");
+				if(item_lunar && item_lunar->type == cJSON_String)
+				{
+					strcpy(lunar.lunar, item_lunar->valuestring);
+					NORDIC_UART_LOGI("lunar =%s", lunar.lunar);
+				}
+				cJSON *item_ganzhi = cJSON_GetObjectItem(lunar_json, "ganzhi");
+				if(item_ganzhi && item_ganzhi->type == cJSON_String)
+				{
+					strcpy(lunar.ganzhi, item_ganzhi->valuestring);
+					NORDIC_UART_LOGI("ganzhi =%s", lunar.ganzhi);
+				}
+				cJSON *item_zodiac = cJSON_GetObjectItem(lunar_json, "zodiac");
+				if(item_zodiac && item_zodiac->type == cJSON_String)
+				{
+					strcpy(lunar.zodiac, item_zodiac->valuestring);
+					NORDIC_UART_LOGI("zodiac =%s", lunar.zodiac);
+				}
+				cJSON *item_fitavoid = cJSON_GetObjectItem(lunar_json, "fitavoid");
+				if(item_fitavoid && item_fitavoid->type == cJSON_String)
+				{
+					strcpy(lunar.fitavoid, item_fitavoid->valuestring);
+					NORDIC_UART_LOGI("fitavoid =%s", lunar.fitavoid);
+				}
+				cJSON *item_time = cJSON_GetObjectItem(lunar_json, "time");
+				if(item_time && item_time->type == cJSON_Number)
+				{
+					lunar.time = (int)(item_time->valuedouble/1000);
+					NORDIC_UART_LOGI("time =%s", lunar.time);
+				}
+				cJSON_delete(lunar_json);
+				//repack
+				p_recv_packet->packet_len = sizeof(sg_lunar_t);
+				memcpy(p_recv_packet->data, &lunar, sizeof(sg_lunar_t));
+
+				//send to nordic
+			}
+			break;
+			case DEVICE_OPERATION:
+			{
+				NORDIC_UART_LOGI("%s---------DEVICE_OPERATION", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+
+			}
+			break;
+			case DEVICE_COERCE_UNBIND:
+			{
+				NORDIC_UART_LOGI("%s---------DEVICE_COERCE_UNBIND", __FUNCTION__);
+				//p_recv_packet->packet_len = ntohl(p_recv_packet->packet_len);
+
+			}
+			break;
+
 			default:
 				NORDIC_UART_LOGE("%s---------RECV CMD ERROR", __FUNCTION__);
 			break;
@@ -1558,8 +1743,6 @@ void socket_recv_msg_process(void *msg      , int len)
 
 	}
     
-
-
     //p_recv_packet->protocol_ver = SG_PROTOCOL_VER;
     //p_recv_packet->enryption_type = SG_ENCRYPTION_TYPE;
     //p_recv_packet->status = 0;
