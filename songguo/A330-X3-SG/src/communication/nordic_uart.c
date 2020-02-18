@@ -693,6 +693,25 @@ proc_end:
 
 }
 
+int addKeyValue(char *dst, char *key, char *value)
+{
+	int byte_size = 0;
+    char *data = dst;
+    int *p_key_len = (int*)data;
+    char *p_key = (char*)(p_key_len+1);
+    memcpy(p_key, key, strlen(key));
+    *p_key_len = htonl(strlen(key));
+    byte_size += sizeof(int) + strlen(key);
+
+    int *p_value_len = (int*)(p_key+strlen(key));
+    char *p_value = (char*)(p_value_len+1);
+    memcpy(p_value, value, strlen(value));
+    *p_value_len = htonl(strlen(value));
+    byte_size += sizeof(int) + strlen(value);
+
+    return byte_size;
+}
+
 void parse_pack_send(sg_commut_data_t *p_packet, int len)
 {
 	//parse repack and send
@@ -1255,6 +1274,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			memcpy(&user_info, p_packet->data, sizeof(sg_user_info_t));
 
 			//repack
+			#if 0
 			//.......birthday = 2018-09-28
 			int *p_key1_len = (int*)p_packet->data;
 			char *p_key1 = (char*)(p_key1_len+1);
@@ -1303,6 +1323,24 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			itoa(user_info.weight, p_value4, 10);
 			*p_value4_len = htonl(strlen(p_value4));
 			pack_data_len += sizeof(int) + strlen(p_value4);
+			#else 
+				//value1 -->user_info.birsday
+				char *value1 = user_info.birthday;
+				pack_data_len += addKeyValue(p_packet->data, key1, value1);
+
+				char value2[3+1] = {0};
+				itoa(user_info.sex, value2, 10);
+				pack_data_len += addKeyValue(p_packet->data + pack_data_len, key2, value2);
+
+				char value3[3+1] = {0};
+				itoa(user_info.height, value3, 10);
+				pack_data_len += addKeyValue(p_packet->data + pack_data_len, key3, value3);
+
+				char value4[3+1] = {0};
+				itoa(user_info.weight, value4, 10);
+				pack_data_len += addKeyValue(p_packet->data + pack_data_len, key4, value4);
+
+			#endif
 
 			//send
 		}
@@ -1325,6 +1363,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			memcpy(&sleep_data, p_packet->data, sizeof(sg_sleep_t));
 			
 			//repack
+			#if 0
 			int *p_key_len = (int*)p_packet->data;
 			char *p_key = (char*)(p_key_len+1);
 			memcpy(p_key, key, strlen(key));
@@ -1337,6 +1376,14 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
             sleep_data.time_end, sleep_data.time_deep, sleep_data.time_wake, sleep_data.time_light);
 			*p_value_len = htonl(strlen(p_value));
 			pack_data_len += sizeof(int)+strlen(p_value);
+			#else
+				char value[256] = {0};
+				memset(value, 0, sizeof(value));
+				sprintf(value, "[{\"total\":\"%d000-%d000\",\"deep\":%d,\"wake\":%d,\"light\":%d}]", sleep_data.time_begin,\
+            	sleep_data.time_end, sleep_data.time_deep, sleep_data.time_wake, sleep_data.time_light);
+
+				pack_data_len += addKeyValue(p_packet->data, key, value);
+			#endif
 
 			//send
 		}
@@ -1354,6 +1401,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			struct tm time = *localtime((time_t*)&tmp);
 
 			//repack
+			#if 0
 			int *p_key_len = (int*)p_packet->data;
 			char *p_key = (char*)(p_key_len+1);
 			memcpy(p_key, key, strlen(key));
@@ -1365,7 +1413,11 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 			sprintf(p_value, "%d-%02d-%02d", time.tm_year+1900, time.tm_mon, time.tm_yday);
 			*p_value_len = htonl(strlen(p_value));
 			pack_data_len += sizeof(int) + strlen(p_value);
-			
+			#else 
+			char value[15+1] = {0};
+			sprintf(value, "%d-%02d-%02d", time.tm_year+1900, time.tm_mon, time.tm_yday);
+			pack_data_len += addKeyValue(p_packet->data, key, value);
+			#endif
 			//send
 		}
 		break;
