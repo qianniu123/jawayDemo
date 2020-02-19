@@ -75,14 +75,12 @@ typedef struct
     void *param;
 }socket_recv_queue_msg_t;
 
-//better way is 
-/*
+typedef struct
 {
-    msg_id; //ready_read, read_write
-    cmd_id; //communication cmd
-    *param;
-}
-*/
+	int msg_id;
+	void* param;
+}nb_msg_t;
+
 
 #define MAX_GPS_NUM 10
 typedef struct
@@ -120,10 +118,10 @@ typedef struct
 	uint8_t nb_net_state;//current net
 	uint8_t write_agps_state;
 	rfcal_flag_response_t rfcal;
-	sg_gps_t gps;
+	volatile sg_gps_t gps;
 	gsv_rsp_t gsv;
 	
-	int time;
+	double time;
 	char server_ip[64+1];
 	char token[32+1];
 	

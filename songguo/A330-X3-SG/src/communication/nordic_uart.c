@@ -999,7 +999,7 @@ void parse_pack_send(sg_commut_data_t *p_packet, int len)
 		case LOCATION_UPLOAD:
 		case WEATHER_QUERY:
 		{
-			hal_uart_send_dma(NORDIC_UART, (char*)p_packet, (sizeof(sg_commut_data_t) + p_packet->packet_len + 5));// for test
+			//hal_uart_send_dma(NORDIC_UART, (char*)p_packet, (sizeof(sg_commut_data_t) + p_packet->packet_len + 5));// for test
 			NORDIC_UART_LOGI("nordic send LOCATION_UPLOAD: \n");
 			//get value from nordic
 			sg_wifi_t wifi[WIFI_FIX_CNT] = {0};
@@ -1626,12 +1626,12 @@ void socket_recv_msg_process(void *msg, int len)
 				char *p_key = (char*)(p_key_len + 1);
 				NORDIC_UART_LOGI("key_len=%d, key=%s\n", ntohl(*p_key_len), p_key);
 
-				int *p_value_len = (int*)(p_key+ntohl(*p_key_len);
+				int *p_value_len = (int*)(p_key+ntohl(*p_key_len));
 				char *p_value = (char*)(p_value_len + 1);
 				NORDIC_UART_LOGI("value_len=%d, value=%s\n", ntohl(*p_value_len), p_value);
 
 				sg_weather_t weather[3] = {0};
-				cJSON *array_json = cJSON_parse(p_value);
+				cJSON *array_json = cJSON_Parse(p_value);
 				if(array_json == NULL)
 				{
 					NORDIC_UART_LOGE("array_json parse error");
@@ -1694,7 +1694,7 @@ void socket_recv_msg_process(void *msg, int len)
 						}
 					}
 				}
-				cJSON_delete(array_json);
+				cJSON_Delete(array_json);
 
 				//repack and send to nordic
 				
@@ -1716,7 +1716,7 @@ void socket_recv_msg_process(void *msg, int len)
 				NORDIC_UART_LOGI("value_len=%d, value=%s\n", ntohl(*p_value_len), p_value);
 
 				sg_lunar_t lunar = {0};
-				cJSON *lunar_json = cJSON_parse(p_value);
+				cJSON *lunar_json = cJSON_Parse(p_value);
 				if(lunar_json == NULL)
 				{
 					NORDIC_UART_LOGE("lunar_json parse error");
@@ -1765,7 +1765,7 @@ void socket_recv_msg_process(void *msg, int len)
 					lunar.time = (int)(item_time->valuedouble/1000);
 					NORDIC_UART_LOGI("time =%s", lunar.time);
 				}
-				cJSON_delete(lunar_json);
+				cJSON_Delete(lunar_json);
 				//repack
 				p_recv_packet->packet_len = sizeof(sg_lunar_t);
 				memcpy(p_recv_packet->data, &lunar, sizeof(sg_lunar_t));
